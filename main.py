@@ -36,13 +36,15 @@ def view_tasks(tasks):
             status = "✔" if task['completed'] else "✖"
             due_date = task['due_date'] if task['due_date'] else "No due date"
             recurrence = task['recurrence'] if task['recurrence'] else "No recurrence"
-            print(f"{index}. [{status}] {task['description']} (Priority: {task['priority']}, Due: {due_date}, Recurrence: {recurrence})")
+            category = task['category'] if task['category'] else "No category"
+            print(f"{index}. [{status}] {task['description']} (Priority: {task['priority']}, Due: {due_date}, Recurrence: {recurrence}, Category: {category})")
 
 def add_task(tasks):
     task_description = input("Enter the task description: ")
     task_priority = input("Enter the task priority (High, Medium, Low): ").capitalize()
     task_due_date = input("Enter the task due date (YYYY-MM-DD) or press Enter to skip: ")
     task_recurrence = input("Enter the task recurrence (None, Daily, Weekly, Monthly): ").capitalize()
+    task_category = input("Enter the task category (e.g., Work, Personal, Shopping): ").capitalize()
     
     # Validate date format
     if task_due_date:
@@ -59,7 +61,8 @@ def add_task(tasks):
         'priority': task_priority,
         'completed': False,
         'due_date': task_due_date,
-        'recurrence': task_recurrence
+        'recurrence': task_recurrence,
+        'category': task_category
     })
     print(f"Task '{task_description}' added.")
 
@@ -101,7 +104,8 @@ def mark_task_complete(tasks):
                         'priority': task['priority'],
                         'completed': False,
                         'due_date': new_due_date,
-                        'recurrence': task['recurrence']
+                        'recurrence': task['recurrence'],
+                        'category': task['category']
                     })
                     print(f"Recurring task '{task['description']}' added with new due date {new_due_date}.")
             else:
@@ -119,6 +123,7 @@ def edit_task(tasks):
                 new_priority = input("Enter the new task priority (High, Medium, Low): ").capitalize()
                 new_due_date = input("Enter the new task due date (YYYY-MM-DD) or press Enter to keep the current due date: ")
                 new_recurrence = input("Enter the new task recurrence (None, Daily, Weekly, Monthly): ").capitalize()
+                new_category = input("Enter the new task category (e.g., Work, Personal, Shopping): ").capitalize()
                 
                 # Validate date format
                 if new_due_date:
@@ -132,6 +137,7 @@ def edit_task(tasks):
                 tasks[task_number - 1]['priority'] = new_priority
                 tasks[task_number - 1]['due_date'] = new_due_date
                 tasks[task_number - 1]['recurrence'] = new_recurrence
+                tasks[task_number - 1]['category'] = new_category
                 print(f"Task '{tasks[task_number - 1]['description']}' updated.")
             else:
                 print("Invalid task number.")
