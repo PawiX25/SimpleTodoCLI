@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 # File to store tasks
 TASKS_FILE = "tasks.json"
@@ -33,12 +34,30 @@ def view_tasks(tasks):
         print("\nTo-Do List:")
         for index, task in enumerate(tasks, start=1):
             status = "✔" if task['completed'] else "✖"
-            print(f"{index}. [{status}] {task['description']} (Priority: {task['priority']})")
+            due_date = task['due_date'] if task['due_date'] else "No due date"
+            print(f"{index}. [{status}] {task['description']} (Priority: {task['priority']}, Due: {due_date})")
 
 def add_task(tasks):
     task_description = input("Enter the task description: ")
     task_priority = input("Enter the task priority (High, Medium, Low): ").capitalize()
-    tasks.append({'description': task_description, 'priority': task_priority, 'completed': False})
+    task_due_date = input("Enter the task due date (YYYY-MM-DD) or press Enter to skip: ")
+    
+    # Validate date format
+    if task_due_date:
+        try:
+            datetime.strptime(task_due_date, "%Y-%m-%d")
+        except ValueError:
+            print("Invalid date format. Task added without due date.")
+            task_due_date = None
+    else:
+        task_due_date = None
+    
+    tasks.append({
+        'description': task_description,
+        'priority': task_priority,
+        'completed': False,
+        'due_date': task_due_date
+    })
     print(f"Task '{task_description}' added.")
 
 def remove_task(tasks):
@@ -75,8 +94,19 @@ def edit_task(tasks):
             if 1 <= task_number <= len(tasks):
                 new_description = input("Enter the new task description: ")
                 new_priority = input("Enter the new task priority (High, Medium, Low): ").capitalize()
+                new_due_date = input("Enter the new task due date (YYYY-MM-DD) or press Enter to keep the current due date: ")
+                
+                # Validate date format
+                if new_due_date:
+                    try:
+                        datetime.strptime(new_due_date, "%Y-%m-%d")
+                    except ValueError:
+                        print("Invalid date format. Keeping the current due date.")
+                        new_due_date = tasks[task_number - 1]['due_date']
+                
                 tasks[task_number - 1]['description'] = new_description
                 tasks[task_number - 1]['priority'] = new_priority
+                tasks[task_number - 1]['due_date'] = new_due_date
                 print(f"Task '{tasks[task_number - 1]['description']}' updated.")
             else:
                 print("Invalid task number.")
@@ -96,6 +126,7 @@ def sort_tasks(tasks):
     print("\nSort Tasks:")
     print("1. By Priority")
     print("2. By Completion Status")
+    print("3. By Due Date")
     choice = input("Enter your choice: ")
     
     if choice == '1':
@@ -104,14 +135,18 @@ def sort_tasks(tasks):
     elif choice == '2':
         tasks.sort(key=lambda x: x['completed'])
         print("\nTasks sorted by completion status.")
+    elif choice == '3':
+        tasks.sort(key=lambda x: x['due_date'] if x['due_date'] else '')
+        print("\nTasks sorted by due date.")
     else:
-        print("Invalid choice. Please enter 1 or 2.")
+        print("Invalid choice. Please enter 1, 2, or 3.")
 
 def filter_tasks(tasks):
     print("\nFilter Tasks:")
     print("1. View Completed Tasks")
     print("2. View Incomplete Tasks")
     print("3. View Tasks by Priority")
+    print("4. View Overdue Tasks")
     choice = input("Enter your choice: ")
     
     if choice == '1':
@@ -124,8 +159,12 @@ def filter_tasks(tasks):
         priority = input("Enter priority to filter by (High, Medium, Low): ").capitalize()
         filtered_tasks = [task for task in tasks if task['priority'] == priority]
         view_tasks(filtered_tasks)
+    elif choice == '4':
+        today = datetime.now().strftime("%Y-%m-%d")
+        filtered_tasks = [task for task in tasks if task['due_date'] and task['due_date'] < today]
+        view_tasks(filtered_tasks)
     else:
-        print("Invalid choice. Please enter 1, 2, or 3.")
+        print("Invalid choice. Please enter 1, 2, 3, or 4.")
 
 def main():
     tasks = load_tasks()
