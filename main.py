@@ -1,10 +1,27 @@
+import json
+
+# File to store tasks
+TASKS_FILE = "tasks.json"
+
 def display_menu():
     print("\nTo-Do List Menu:")
     print("1. View To-Do List")
     print("2. Add Task")
     print("3. Remove Task")
     print("4. Mark Task as Complete")
-    print("5. Exit")
+    print("5. Edit Task")
+    print("6. Save and Exit")
+
+def load_tasks():
+    try:
+        with open(TASKS_FILE, "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return []
+
+def save_tasks(tasks):
+    with open(TASKS_FILE, "w") as file:
+        json.dump(tasks, file, indent=4)
 
 def view_tasks(tasks):
     if not tasks:
@@ -13,11 +30,12 @@ def view_tasks(tasks):
         print("\nTo-Do List:")
         for index, task in enumerate(tasks, start=1):
             status = "✔" if task['completed'] else "✖"
-            print(f"{index}. [{status}] {task['description']}")
+            print(f"{index}. [{status}] {task['description']} (Priority: {task['priority']})")
 
 def add_task(tasks):
     task_description = input("Enter the task description: ")
-    tasks.append({'description': task_description, 'completed': False})
+    task_priority = input("Enter the task priority (High, Medium, Low): ").capitalize()
+    tasks.append({'description': task_description, 'priority': task_priority, 'completed': False})
     print(f"Task '{task_description}' added.")
 
 def remove_task(tasks):
@@ -46,11 +64,27 @@ def mark_task_complete(tasks):
         except ValueError:
             print("Please enter a valid number.")
 
+def edit_task(tasks):
+    view_tasks(tasks)
+    if tasks:
+        try:
+            task_number = int(input("Enter the task number to edit: "))
+            if 1 <= task_number <= len(tasks):
+                new_description = input("Enter the new task description: ")
+                new_priority = input("Enter the new task priority (High, Medium, Low): ").capitalize()
+                tasks[task_number - 1]['description'] = new_description
+                tasks[task_number - 1]['priority'] = new_priority
+                print(f"Task '{tasks[task_number - 1]['description']}' updated.")
+            else:
+                print("Invalid task number.")
+        except ValueError:
+            print("Please enter a valid number.")
+
 def main():
-    tasks = []
+    tasks = load_tasks()
     while True:
         display_menu()
-        choice = input("\nEnter your choice (1-5): ")
+        choice = input("\nEnter your choice (1-6): ")
         
         if choice == '1':
             view_tasks(tasks)
@@ -61,10 +95,13 @@ def main():
         elif choice == '4':
             mark_task_complete(tasks)
         elif choice == '5':
-            print("Exiting the to-do list app. Goodbye!")
+            edit_task(tasks)
+        elif choice == '6':
+            save_tasks(tasks)
+            print("Tasks saved. Exiting the to-do list app. Goodbye!")
             break
         else:
-            print("Invalid choice. Please enter a number between 1 and 5.")
+            print("Invalid choice. Please enter a number between 1 and 6.")
 
 if __name__ == "__main__":
     main()
