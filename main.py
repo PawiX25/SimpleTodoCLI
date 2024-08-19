@@ -1,8 +1,10 @@
 import json
+import csv
 from datetime import datetime, timedelta
 
 # File to store tasks
 TASKS_FILE = "tasks.json"
+CSV_FILE = "tasks.csv"
 
 def display_menu():
     print("\nTo-Do List Menu:")
@@ -14,7 +16,9 @@ def display_menu():
     print("6. Search Tasks")
     print("7. Sort Tasks")
     print("8. Filter Tasks")
-    print("9. Save and Exit")
+    print("9. Export Tasks to CSV")
+    print("10. Import Tasks from CSV")
+    print("11. Save and Exit")
 
 def load_tasks():
     try:
@@ -227,11 +231,47 @@ def filter_tasks(tasks):
     else:
         print("Invalid choice. Please enter 1, 2, 3, or 4.")
 
+def export_tasks_to_csv(tasks):
+    with open(CSV_FILE, "w", newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Description", "Priority", "Completed", "Due Date", "Due Time", "Recurrence", "Category", "Notes"])
+        for task in tasks:
+            writer.writerow([
+                task['description'],
+                task['priority'],
+                task['completed'],
+                task['due_date'],
+                task['due_time'],
+                task['recurrence'],
+                task['category'],
+                task['notes']
+            ])
+    print(f"Tasks exported to {CSV_FILE}.")
+
+def import_tasks_from_csv(tasks):
+    try:
+        with open(CSV_FILE, "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                tasks.append({
+                    'description': row['Description'],
+                    'priority': row['Priority'],
+                    'completed': row['Completed'] == 'True',
+                    'due_date': row['Due Date'] if row['Due Date'] else None,
+                    'due_time': row['Due Time'] if row['Due Time'] else None,
+                    'recurrence': row['Recurrence'],
+                    'category': row['Category'],
+                    'notes': row['Notes']
+                })
+        print(f"Tasks imported from {CSV_FILE}.")
+    except FileNotFoundError:
+        print(f"{CSV_FILE} not found.")
+
 def main():
     tasks = load_tasks()
     while True:
         display_menu()
-        choice = input("\nEnter your choice (1-9): ")
+        choice = input("\nEnter your choice (1-11): ")
         
         if choice == '1':
             view_tasks(tasks)
@@ -250,11 +290,15 @@ def main():
         elif choice == '8':
             filter_tasks(tasks)
         elif choice == '9':
+            export_tasks_to_csv(tasks)
+        elif choice == '10':
+            import_tasks_from_csv(tasks)
+        elif choice == '11':
             save_tasks(tasks)
             print("Tasks saved. Exiting the to-do list app. Goodbye!")
             break
         else:
-            print("Invalid choice. Please enter a number between 1 and 9.")
+            print("Invalid choice. Please enter a number between 1 and 11.")
 
 if __name__ == "__main__":
     main()
