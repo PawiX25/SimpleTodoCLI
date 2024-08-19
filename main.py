@@ -35,15 +35,17 @@ def view_tasks(tasks):
         for index, task in enumerate(tasks, start=1):
             status = "✔" if task['completed'] else "✖"
             due_date = task['due_date'] if task['due_date'] else "No due date"
+            due_time = task['due_time'] if task['due_time'] else "No due time"
             recurrence = task['recurrence'] if task['recurrence'] else "No recurrence"
             category = task['category'] if task['category'] else "No category"
             notes = task['notes'] if task['notes'] else "No notes"
-            print(f"{index}. [{status}] {task['description']} (Priority: {task['priority']}, Due: {due_date}, Recurrence: {recurrence}, Category: {category}, Notes: {notes})")
+            print(f"{index}. [{status}] {task['description']} (Priority: {task['priority']}, Due: {due_date} {due_time}, Recurrence: {recurrence}, Category: {category}, Notes: {notes})")
 
 def add_task(tasks):
     task_description = input("Enter the task description: ")
     task_priority = input("Enter the task priority (High, Medium, Low): ").capitalize()
     task_due_date = input("Enter the task due date (YYYY-MM-DD) or press Enter to skip: ")
+    task_due_time = input("Enter the task due time (HH:MM) or press Enter to skip: ")
     task_recurrence = input("Enter the task recurrence (None, Daily, Weekly, Monthly): ").capitalize()
     task_category = input("Enter the task category (e.g., Work, Personal, Shopping): ").capitalize()
     task_notes = input("Enter any additional notes for the task: ")
@@ -58,11 +60,22 @@ def add_task(tasks):
     else:
         task_due_date = None
     
+    # Validate time format
+    if task_due_time:
+        try:
+            datetime.strptime(task_due_time, "%H:%M")
+        except ValueError:
+            print("Invalid time format. Task added without due time.")
+            task_due_time = None
+    else:
+        task_due_time = None
+    
     tasks.append({
         'description': task_description,
         'priority': task_priority,
         'completed': False,
         'due_date': task_due_date,
+        'due_time': task_due_time,
         'recurrence': task_recurrence,
         'category': task_category,
         'notes': task_notes
@@ -107,6 +120,7 @@ def mark_task_complete(tasks):
                         'priority': task['priority'],
                         'completed': False,
                         'due_date': new_due_date,
+                        'due_time': task['due_time'],
                         'recurrence': task['recurrence'],
                         'category': task['category'],
                         'notes': task['notes']
@@ -126,6 +140,7 @@ def edit_task(tasks):
                 new_description = input("Enter the new task description: ")
                 new_priority = input("Enter the new task priority (High, Medium, Low): ").capitalize()
                 new_due_date = input("Enter the new task due date (YYYY-MM-DD) or press Enter to keep the current due date: ")
+                new_due_time = input("Enter the new task due time (HH:MM) or press Enter to keep the current due time: ")
                 new_recurrence = input("Enter the new task recurrence (None, Daily, Weekly, Monthly): ").capitalize()
                 new_category = input("Enter the new task category (e.g., Work, Personal, Shopping): ").capitalize()
                 new_notes = input("Enter the new task notes: ")
@@ -138,9 +153,18 @@ def edit_task(tasks):
                         print("Invalid date format. Keeping the current due date.")
                         new_due_date = tasks[task_number - 1]['due_date']
                 
+                # Validate time format
+                if new_due_time:
+                    try:
+                        datetime.strptime(new_due_time, "%H:%M")
+                    except ValueError:
+                        print("Invalid time format. Keeping the current due time.")
+                        new_due_time = tasks[task_number - 1]['due_time']
+                
                 tasks[task_number - 1]['description'] = new_description
                 tasks[task_number - 1]['priority'] = new_priority
                 tasks[task_number - 1]['due_date'] = new_due_date
+                tasks[task_number - 1]['due_time'] = new_due_time
                 tasks[task_number - 1]['recurrence'] = new_recurrence
                 tasks[task_number - 1]['category'] = new_category
                 tasks[task_number - 1]['notes'] = new_notes
