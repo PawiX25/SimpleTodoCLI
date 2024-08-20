@@ -40,11 +40,11 @@ def view_tasks(tasks):
         print("\nTo-Do List:")
         for index, task in enumerate(tasks, start=1):
             status = "✔" if task['completed'] else "✖"
-            due_date = task['due_date'] if task['due_date'] else "No due date"
-            due_time = task['due_time'] if task['due_time'] else "No due time"
-            recurrence = task['recurrence'] if task['recurrence'] else "No recurrence"
-            category = task['category'] if task['category'] else "No category"
-            notes = task['notes'] if task['notes'] else "No notes"
+            due_date = task.get('due_date', "No due date")
+            due_time = task.get('due_time', "No due time")
+            recurrence = task.get('recurrence', "No recurrence")
+            category = task.get('category', "No category")
+            notes = task.get('notes', "No notes")
             print(f"{index}. [{status}] {task['description']} (Priority: {task['priority']}, Due: {due_date} {due_time}, Recurrence: {recurrence}, Category: {category}, Notes: {notes})")
 
 def send_notification(title, message):
@@ -138,15 +138,12 @@ def mark_task_complete(tasks, args=None):
         if task['recurrence'] != "None":
             new_due_date = None
             if task['due_date']:
-                try:
-                    if task['recurrence'] == "Daily":
-                        new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-                    elif task['recurrence'] == "Weekly":
-                        new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(weeks=1)).strftime("%Y-%m-%d")
-                    elif task['recurrence'] == "Monthly":
-                        new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=30)).strftime("%Y-%m-%d")
-                except ValueError as e:
-                    print(f"Error calculating new due date: {e}")
+                if task['recurrence'] == "Daily":
+                    new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+                elif task['recurrence'] == "Weekly":
+                    new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(weeks=1)).strftime("%Y-%m-%d")
+                elif task['recurrence'] == "Monthly":
+                    new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=30)).strftime("%Y-%m-%d")
             
             tasks.append({
                 'description': task['description'],
@@ -241,7 +238,7 @@ def sort_tasks(tasks, args=None):
         tasks.sort(key=lambda x: x['completed'])
         print("\nTasks sorted by completion status.")
     elif choice == '3':
-        tasks.sort(key=lambda x: x['due_date'] if x['due_date'] else '')
+        tasks.sort(key=lambda x: x.get('due_date', ''))
         print("\nTasks sorted by due date.")
     else:
         print("Invalid choice. Please enter 1, 2, or 3.")
@@ -269,7 +266,7 @@ def filter_tasks(tasks, args=None):
         view_tasks(filtered_tasks)
     elif choice == '4':
         today = datetime.now().strftime("%Y-%m-%d")
-        filtered_tasks = [task for task in tasks if task['due_date'] and task['due_date'] < today]
+        filtered_tasks = [task for task in tasks if task.get('due_date') and task['due_date'] < today]
         view_tasks(filtered_tasks)
     else:
         print("Invalid choice. Please enter 1, 2, 3, or 4.")
@@ -283,11 +280,11 @@ def export_tasks_to_csv(tasks):
                 task['description'],
                 task['priority'],
                 task['completed'],
-                task['due_date'],
-                task['due_time'],
-                task['recurrence'],
-                task['category'],
-                task['notes']
+                task.get('due_date', "No due date"),
+                task.get('due_time', "No due time"),
+                task.get('recurrence', "No recurrence"),
+                task.get('category', "No category"),
+                task.get('notes', "No notes")
             ])
     print(f"Tasks exported to {CSV_FILE}.")
     send_notification("Tasks Exported", f"Tasks have been exported to {CSV_FILE}.")
@@ -301,11 +298,11 @@ def import_tasks_from_csv(tasks):
                     'description': row['Description'],
                     'priority': row['Priority'],
                     'completed': row['Completed'] == 'True',
-                    'due_date': row['Due Date'] if row['Due Date'] else None,
-                    'due_time': row['Due Time'] if row['Due Time'] else None,
-                    'recurrence': row['Recurrence'],
-                    'category': row['Category'],
-                    'notes': row['Notes']
+                    'due_date': row['Due Date'] if row['Due Date'] != "No due date" else None,
+                    'due_time': row['Due Time'] if row['Due Time'] != "No due time" else None,
+                    'recurrence': row['Recurrence'] if row['Recurrence'] != "No recurrence" else "None",
+                    'category': row['Category'] if row['Category'] != "No category" else "No category",
+                    'notes': row['Notes'] if row['Notes'] != "No notes" else "No notes"
                 })
         print(f"Tasks imported from {CSV_FILE}.")
         send_notification("Tasks Imported", f"Tasks have been imported from {CSV_FILE}.")
@@ -394,7 +391,6 @@ def main():
         while True:
             display_menu()
             choice = input("\nEnter your choice (1-11): ")
-            
             if choice == '1':
                 view_tasks(tasks)
             elif choice == '2':
