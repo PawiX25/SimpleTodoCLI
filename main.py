@@ -126,12 +126,16 @@ def mark_task_complete(tasks, args=None):
         # Handle recurrence
         if task['recurrence'] != "None":
             new_due_date = None
-            if task['recurrence'] == "Daily":
-                new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-            elif task['recurrence'] == "Weekly":
-                new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(weeks=1)).strftime("%Y-%m-%d")
-            elif task['recurrence'] == "Monthly":
-                new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=30)).strftime("%Y-%m-%d")
+            if task['due_date']:
+                try:
+                    if task['recurrence'] == "Daily":
+                        new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+                    elif task['recurrence'] == "Weekly":
+                        new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(weeks=1)).strftime("%Y-%m-%d")
+                    elif task['recurrence'] == "Monthly":
+                        new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=30)).strftime("%Y-%m-%d")
+                except ValueError as e:
+                    print(f"Error parsing date for task {task['description']}: {e}")
             
             tasks.append({
                 'description': task['description'],
