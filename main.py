@@ -1,7 +1,8 @@
+from datetime import datetime, timedelta
 import json
 import csv
 import argparse
-from datetime import datetime, timedelta
+from plyer import notification
 
 # File to store tasks
 TASKS_FILE = "tasks.json"
@@ -45,6 +46,13 @@ def view_tasks(tasks):
             category = task['category'] if task['category'] else "No category"
             notes = task['notes'] if task['notes'] else "No notes"
             print(f"{index}. [{status}] {task['description']} (Priority: {task['priority']}, Due: {due_date} {due_time}, Recurrence: {recurrence}, Category: {category}, Notes: {notes})")
+
+def send_notification(title, message):
+    notification.notify(
+        title=title,
+        message=message,
+        timeout=10
+    )
 
 def add_task(tasks, args=None):
     if args:
@@ -95,6 +103,7 @@ def add_task(tasks, args=None):
         'notes': task_notes
     })
     print(f"Task '{task_description}' added.")
+    send_notification("Task Added", f"Task '{task_description}' has been added to your to-do list.")
 
 def remove_task(tasks, args=None):
     if args:
@@ -107,6 +116,7 @@ def remove_task(tasks, args=None):
     if 1 <= task_number <= len(tasks):
         removed_task = tasks.pop(task_number - 1)
         print(f"Task '{removed_task['description']}' removed.")
+        send_notification("Task Removed", f"Task '{removed_task['description']}' has been removed from your to-do list.")
     else:
         print("Invalid task number.")
 
@@ -122,6 +132,7 @@ def mark_task_complete(tasks, args=None):
         task = tasks[task_number - 1]
         task['completed'] = True
         print(f"Task '{task['description']}' marked as complete.")
+        send_notification("Task Completed", f"Task '{task['description']}' has been marked as complete.")
         
         # Handle recurrence
         if task['recurrence'] != "None":
@@ -135,7 +146,7 @@ def mark_task_complete(tasks, args=None):
                     elif task['recurrence'] == "Monthly":
                         new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=30)).strftime("%Y-%m-%d")
                 except ValueError as e:
-                    print(f"Error parsing date for task {task['description']}: {e}")
+                    print(f"Error calculating new due date: {e}")
             
             tasks.append({
                 'description': task['description'],
@@ -148,6 +159,7 @@ def mark_task_complete(tasks, args=None):
                 'notes': task['notes']
             })
             print(f"Recurring task '{task['description']}' added with new due date {new_due_date}.")
+            send_notification("Recurring Task Added", f"Recurring task '{task['description']}' has been added with new due date {new_due_date}.")
     else:
         print("Invalid task number.")
 
@@ -197,6 +209,7 @@ def edit_task(tasks, args=None):
     tasks[task_number - 1]['category'] = new_category
     tasks[task_number - 1]['notes'] = new_notes
     print(f"Task '{tasks[task_number - 1]['description']}' updated.")
+    send_notification("Task Updated", f"Task '{tasks[task_number - 1]['description']}' has been updated.")
 
 def search_tasks(tasks, args=None):
     if args:
@@ -277,6 +290,7 @@ def export_tasks_to_csv(tasks):
                 task['notes']
             ])
     print(f"Tasks exported to {CSV_FILE}.")
+    send_notification("Tasks Exported", f"Tasks have been exported to {CSV_FILE}.")
 
 def import_tasks_from_csv(tasks):
     try:
@@ -294,6 +308,7 @@ def import_tasks_from_csv(tasks):
                     'notes': row['Notes']
                 })
         print(f"Tasks imported from {CSV_FILE}.")
+        send_notification("Tasks Imported", f"Tasks have been imported from {CSV_FILE}.")
     except FileNotFoundError:
         print(f"{CSV_FILE} not found.")
 
@@ -403,6 +418,7 @@ def main():
             elif choice == '11':
                 save_tasks(tasks)
                 print("Tasks saved. Exiting the to-do list app. Goodbye!")
+                send_notification("Tasks Saved", "Tasks have been saved. Exiting the to-do list app. Goodbye!")
                 break
             else:
                 print("Invalid choice. Please enter a number between 1 and 11.")
