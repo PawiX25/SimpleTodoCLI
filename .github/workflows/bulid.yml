@@ -40,7 +40,7 @@ jobs:
         if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
           mv dist/main dist/todo
         else
-          ren dist\main.exe todo.exe
+          mv dist/main.exe dist/todo.exe
         fi
       shell: bash
 
