@@ -1,5 +1,6 @@
 import json
 import csv
+import argparse
 from datetime import datetime, timedelta
 
 # File to store tasks
@@ -45,14 +46,23 @@ def view_tasks(tasks):
             notes = task['notes'] if task['notes'] else "No notes"
             print(f"{index}. [{status}] {task['description']} (Priority: {task['priority']}, Due: {due_date} {due_time}, Recurrence: {recurrence}, Category: {category}, Notes: {notes})")
 
-def add_task(tasks):
-    task_description = input("Enter the task description: ")
-    task_priority = input("Enter the task priority (High, Medium, Low): ").capitalize()
-    task_due_date = input("Enter the task due date (YYYY-MM-DD) or press Enter to skip: ")
-    task_due_time = input("Enter the task due time (HH:MM) or press Enter to skip: ")
-    task_recurrence = input("Enter the task recurrence (None, Daily, Weekly, Monthly): ").capitalize()
-    task_category = input("Enter the task category (e.g., Work, Personal, Shopping): ").capitalize()
-    task_notes = input("Enter any additional notes for the task: ")
+def add_task(tasks, args=None):
+    if args:
+        task_description = args.description
+        task_priority = args.priority.capitalize()
+        task_due_date = args.due_date
+        task_due_time = args.due_time
+        task_recurrence = args.recurrence.capitalize()
+        task_category = args.category.capitalize()
+        task_notes = args.notes
+    else:
+        task_description = input("Enter the task description: ")
+        task_priority = input("Enter the task priority (High, Medium, Low): ").capitalize()
+        task_due_date = input("Enter the task due date (YYYY-MM-DD) or press Enter to skip: ")
+        task_due_time = input("Enter the task due time (HH:MM) or press Enter to skip: ")
+        task_recurrence = input("Enter the task recurrence (None, Daily, Weekly, Monthly): ").capitalize()
+        task_category = input("Enter the task category (e.g., Work, Personal, Shopping): ").capitalize()
+        task_notes = input("Enter any additional notes for the task: ")
     
     # Validate date format
     if task_due_date:
@@ -86,100 +96,110 @@ def add_task(tasks):
     })
     print(f"Task '{task_description}' added.")
 
-def remove_task(tasks):
-    view_tasks(tasks)
-    if tasks:
-        try:
+def remove_task(tasks, args=None):
+    if args:
+        task_number = args.task_number
+    else:
+        view_tasks(tasks)
+        if tasks:
             task_number = int(input("Enter the task number to remove: "))
-            if 1 <= task_number <= len(tasks):
-                removed_task = tasks.pop(task_number - 1)
-                print(f"Task '{removed_task['description']}' removed.")
-            else:
-                print("Invalid task number.")
-        except ValueError:
-            print("Please enter a valid number.")
+    
+    if 1 <= task_number <= len(tasks):
+        removed_task = tasks.pop(task_number - 1)
+        print(f"Task '{removed_task['description']}' removed.")
+    else:
+        print("Invalid task number.")
 
-def mark_task_complete(tasks):
-    view_tasks(tasks)
-    if tasks:
-        try:
+def mark_task_complete(tasks, args=None):
+    if args:
+        task_number = args.task_number
+    else:
+        view_tasks(tasks)
+        if tasks:
             task_number = int(input("Enter the task number to mark as complete: "))
-            if 1 <= task_number <= len(tasks):
-                task = tasks[task_number - 1]
-                task['completed'] = True
-                print(f"Task '{task['description']}' marked as complete.")
-                
-                # Handle recurrence
-                if task['recurrence'] != "None":
-                    new_due_date = None
-                    if task['recurrence'] == "Daily":
-                        new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-                    elif task['recurrence'] == "Weekly":
-                        new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(weeks=1)).strftime("%Y-%m-%d")
-                    elif task['recurrence'] == "Monthly":
-                        new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=30)).strftime("%Y-%m-%d")
-                    
-                    tasks.append({
-                        'description': task['description'],
-                        'priority': task['priority'],
-                        'completed': False,
-                        'due_date': new_due_date,
-                        'due_time': task['due_time'],
-                        'recurrence': task['recurrence'],
-                        'category': task['category'],
-                        'notes': task['notes']
-                    })
-                    print(f"Recurring task '{task['description']}' added with new due date {new_due_date}.")
-            else:
-                print("Invalid task number.")
-        except ValueError:
-            print("Please enter a valid number.")
+    
+    if 1 <= task_number <= len(tasks):
+        task = tasks[task_number - 1]
+        task['completed'] = True
+        print(f"Task '{task['description']}' marked as complete.")
+        
+        # Handle recurrence
+        if task['recurrence'] != "None":
+            new_due_date = None
+            if task['recurrence'] == "Daily":
+                new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+            elif task['recurrence'] == "Weekly":
+                new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(weeks=1)).strftime("%Y-%m-%d")
+            elif task['recurrence'] == "Monthly":
+                new_due_date = (datetime.strptime(task['due_date'], "%Y-%m-%d") + timedelta(days=30)).strftime("%Y-%m-%d")
+            
+            tasks.append({
+                'description': task['description'],
+                'priority': task['priority'],
+                'completed': False,
+                'due_date': new_due_date,
+                'due_time': task['due_time'],
+                'recurrence': task['recurrence'],
+                'category': task['category'],
+                'notes': task['notes']
+            })
+            print(f"Recurring task '{task['description']}' added with new due date {new_due_date}.")
+    else:
+        print("Invalid task number.")
 
-def edit_task(tasks):
-    view_tasks(tasks)
-    if tasks:
-        try:
+def edit_task(tasks, args=None):
+    if args:
+        task_number = args.task_number
+        new_description = args.description
+        new_priority = args.priority.capitalize()
+        new_due_date = args.due_date
+        new_due_time = args.due_time
+        new_recurrence = args.recurrence.capitalize()
+        new_category = args.category.capitalize()
+        new_notes = args.notes
+    else:
+        view_tasks(tasks)
+        if tasks:
             task_number = int(input("Enter the task number to edit: "))
-            if 1 <= task_number <= len(tasks):
-                new_description = input("Enter the new task description: ")
-                new_priority = input("Enter the new task priority (High, Medium, Low): ").capitalize()
-                new_due_date = input("Enter the new task due date (YYYY-MM-DD) or press Enter to keep the current due date: ")
-                new_due_time = input("Enter the new task due time (HH:MM) or press Enter to keep the current due time: ")
-                new_recurrence = input("Enter the new task recurrence (None, Daily, Weekly, Monthly): ").capitalize()
-                new_category = input("Enter the new task category (e.g., Work, Personal, Shopping): ").capitalize()
-                new_notes = input("Enter the new task notes: ")
-                
-                # Validate date format
-                if new_due_date:
-                    try:
-                        datetime.strptime(new_due_date, "%Y-%m-%d")
-                    except ValueError:
-                        print("Invalid date format. Keeping the current due date.")
-                        new_due_date = tasks[task_number - 1]['due_date']
-                
-                # Validate time format
-                if new_due_time:
-                    try:
-                        datetime.strptime(new_due_time, "%H:%M")
-                    except ValueError:
-                        print("Invalid time format. Keeping the current due time.")
-                        new_due_time = tasks[task_number - 1]['due_time']
-                
-                tasks[task_number - 1]['description'] = new_description
-                tasks[task_number - 1]['priority'] = new_priority
-                tasks[task_number - 1]['due_date'] = new_due_date
-                tasks[task_number - 1]['due_time'] = new_due_time
-                tasks[task_number - 1]['recurrence'] = new_recurrence
-                tasks[task_number - 1]['category'] = new_category
-                tasks[task_number - 1]['notes'] = new_notes
-                print(f"Task '{tasks[task_number - 1]['description']}' updated.")
-            else:
-                print("Invalid task number.")
+            new_description = input("Enter the new task description: ")
+            new_priority = input("Enter the new task priority (High, Medium, Low): ").capitalize()
+            new_due_date = input("Enter the new task due date (YYYY-MM-DD) or press Enter to keep the current due date: ")
+            new_due_time = input("Enter the new task due time (HH:MM) or press Enter to keep the current due time: ")
+            new_recurrence = input("Enter the new task recurrence (None, Daily, Weekly, Monthly): ").capitalize()
+            new_category = input("Enter the new task category (e.g., Work, Personal, Shopping): ").capitalize()
+            new_notes = input("Enter the new task notes: ")
+    
+    # Validate date format
+    if new_due_date:
+        try:
+            datetime.strptime(new_due_date, "%Y-%m-%d")
         except ValueError:
-            print("Please enter a valid number.")
+            print("Invalid date format. Keeping the current due date.")
+            new_due_date = tasks[task_number - 1]['due_date']
+    
+    # Validate time format
+    if new_due_time:
+        try:
+            datetime.strptime(new_due_time, "%H:%M")
+        except ValueError:
+            print("Invalid time format. Keeping the current due time.")
+            new_due_time = tasks[task_number - 1]['due_time']
+    
+    tasks[task_number - 1]['description'] = new_description
+    tasks[task_number - 1]['priority'] = new_priority
+    tasks[task_number - 1]['due_date'] = new_due_date
+    tasks[task_number - 1]['due_time'] = new_due_time
+    tasks[task_number - 1]['recurrence'] = new_recurrence
+    tasks[task_number - 1]['category'] = new_category
+    tasks[task_number - 1]['notes'] = new_notes
+    print(f"Task '{tasks[task_number - 1]['description']}' updated.")
 
-def search_tasks(tasks):
-    keyword = input("Enter a keyword to search for: ").lower()
+def search_tasks(tasks, args=None):
+    if args:
+        keyword = args.keyword.lower()
+    else:
+        keyword = input("Enter a keyword to search for: ").lower()
+    
     matching_tasks = [task for task in tasks if keyword in task['description'].lower()]
     if matching_tasks:
         print("\nSearch Results:")
@@ -187,12 +207,15 @@ def search_tasks(tasks):
     else:
         print("\nNo tasks found matching the keyword.")
 
-def sort_tasks(tasks):
-    print("\nSort Tasks:")
-    print("1. By Priority")
-    print("2. By Completion Status")
-    print("3. By Due Date")
-    choice = input("Enter your choice: ")
+def sort_tasks(tasks, args=None):
+    if args:
+        choice = args.choice
+    else:
+        print("\nSort Tasks:")
+        print("1. By Priority")
+        print("2. By Completion Status")
+        print("3. By Due Date")
+        choice = input("Enter your choice: ")
     
     if choice == '1':
         tasks.sort(key=lambda x: x['priority'])
@@ -206,13 +229,16 @@ def sort_tasks(tasks):
     else:
         print("Invalid choice. Please enter 1, 2, or 3.")
 
-def filter_tasks(tasks):
-    print("\nFilter Tasks:")
-    print("1. View Completed Tasks")
-    print("2. View Incomplete Tasks")
-    print("3. View Tasks by Priority")
-    print("4. View Overdue Tasks")
-    choice = input("Enter your choice: ")
+def filter_tasks(tasks, args=None):
+    if args:
+        choice = args.choice
+    else:
+        print("\nFilter Tasks:")
+        print("1. View Completed Tasks")
+        print("2. View Incomplete Tasks")
+        print("3. View Tasks by Priority")
+        print("4. View Overdue Tasks")
+        choice = input("Enter your choice: ")
     
     if choice == '1':
         filtered_tasks = [task for task in tasks if task['completed']]
@@ -268,37 +294,114 @@ def import_tasks_from_csv(tasks):
         print(f"{CSV_FILE} not found.")
 
 def main():
+    parser = argparse.ArgumentParser(description="Simple To-Do List CLI")
+    subparsers = parser.add_subparsers(dest="command", help="Commands")
+
+    # Add command
+    parser_add = subparsers.add_parser("add", help="Add a task")
+    parser_add.add_argument("description", type=str, help="Task description")
+    parser_add.add_argument("priority", type=str, choices=["High", "Medium", "Low"], help="Task priority")
+    parser_add.add_argument("--due_date", type=str, help="Task due date (YYYY-MM-DD)", default=None)
+    parser_add.add_argument("--due_time", type=str, help="Task due time (HH:MM)", default=None)
+    parser_add.add_argument("--recurrence", type=str, choices=["None", "Daily", "Weekly", "Monthly"], help="Task recurrence", default="None")
+    parser_add.add_argument("--category", type=str, help="Task category", default="No category")
+    parser_add.add_argument("--notes", type=str, help="Additional notes", default="No notes")
+
+    # Remove command
+    parser_remove = subparsers.add_parser("remove", help="Remove a task")
+    parser_remove.add_argument("task_number", type=int, help="Task number to remove")
+
+    # Complete command
+    parser_complete = subparsers.add_parser("complete", help="Mark a task as complete")
+    parser_complete.add_argument("task_number", type=int, help="Task number to mark as complete")
+
+    # Edit command
+    parser_edit = subparsers.add_parser("edit", help="Edit a task")
+    parser_edit.add_argument("task_number", type=int, help="Task number to edit")
+    parser_edit.add_argument("description", type=str, help="New task description")
+    parser_edit.add_argument("priority", type=str, choices=["High", "Medium", "Low"], help="New task priority")
+    parser_edit.add_argument("--due_date", type=str, help="New task due date (YYYY-MM-DD)", default=None)
+    parser_edit.add_argument("--due_time", type=str, help="New task due time (HH:MM)", default=None)
+    parser_edit.add_argument("--recurrence", type=str, choices=["None", "Daily", "Weekly", "Monthly"], help="New task recurrence", default="None")
+    parser_edit.add_argument("--category", type=str, help="New task category", default="No category")
+    parser_edit.add_argument("--notes", type=str, help="New additional notes", default="No notes")
+
+    # Search command
+    parser_search = subparsers.add_parser("search", help="Search tasks")
+    parser_search.add_argument("keyword", type=str, help="Keyword to search for")
+
+    # Sort command
+    parser_sort = subparsers.add_parser("sort", help="Sort tasks")
+    parser_sort.add_argument("choice", type=str, choices=["priority", "completion", "due_date"], help="Sort choice")
+
+    # Filter command
+    parser_filter = subparsers.add_parser("filter", help="Filter tasks")
+    parser_filter.add_argument("choice", type=str, choices=["completed", "incomplete", "priority", "overdue"], help="Filter choice")
+
+    # Export command
+    parser_export = subparsers.add_parser("export", help="Export tasks to CSV")
+
+    # Import command
+    parser_import = subparsers.add_parser("import", help="Import tasks from CSV")
+
+    # View command
+    parser_view = subparsers.add_parser("view", help="View tasks")
+
+    args = parser.parse_args()
+
     tasks = load_tasks()
-    while True:
-        display_menu()
-        choice = input("\nEnter your choice (1-11): ")
-        
-        if choice == '1':
-            view_tasks(tasks)
-        elif choice == '2':
-            add_task(tasks)
-        elif choice == '3':
-            remove_task(tasks)
-        elif choice == '4':
-            mark_task_complete(tasks)
-        elif choice == '5':
-            edit_task(tasks)
-        elif choice == '6':
-            search_tasks(tasks)
-        elif choice == '7':
-            sort_tasks(tasks)
-        elif choice == '8':
-            filter_tasks(tasks)
-        elif choice == '9':
-            export_tasks_to_csv(tasks)
-        elif choice == '10':
-            import_tasks_from_csv(tasks)
-        elif choice == '11':
-            save_tasks(tasks)
-            print("Tasks saved. Exiting the to-do list app. Goodbye!")
-            break
-        else:
-            print("Invalid choice. Please enter a number between 1 and 11.")
+
+    if args.command == "add":
+        add_task(tasks, args)
+    elif args.command == "remove":
+        remove_task(tasks, args)
+    elif args.command == "complete":
+        mark_task_complete(tasks, args)
+    elif args.command == "edit":
+        edit_task(tasks, args)
+    elif args.command == "search":
+        search_tasks(tasks, args)
+    elif args.command == "sort":
+        sort_tasks(tasks, args)
+    elif args.command == "filter":
+        filter_tasks(tasks, args)
+    elif args.command == "export":
+        export_tasks_to_csv(tasks)
+    elif args.command == "import":
+        import_tasks_from_csv(tasks)
+    elif args.command == "view":
+        view_tasks(tasks)
+    else:
+        while True:
+            display_menu()
+            choice = input("\nEnter your choice (1-11): ")
+            
+            if choice == '1':
+                view_tasks(tasks)
+            elif choice == '2':
+                add_task(tasks)
+            elif choice == '3':
+                remove_task(tasks)
+            elif choice == '4':
+                mark_task_complete(tasks)
+            elif choice == '5':
+                edit_task(tasks)
+            elif choice == '6':
+                search_tasks(tasks)
+            elif choice == '7':
+                sort_tasks(tasks)
+            elif choice == '8':
+                filter_tasks(tasks)
+            elif choice == '9':
+                export_tasks_to_csv(tasks)
+            elif choice == '10':
+                import_tasks_from_csv(tasks)
+            elif choice == '11':
+                save_tasks(tasks)
+                print("Tasks saved. Exiting the to-do list app. Goodbye!")
+                break
+            else:
+                print("Invalid choice. Please enter a number between 1 and 11.")
 
 if __name__ == "__main__":
     main()
