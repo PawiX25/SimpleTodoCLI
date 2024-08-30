@@ -1,5 +1,7 @@
 # To-Do List CLI
 
+![Screenshot of To-Do List CLI](https://github.com/user-attachments/assets/999c404c-156a-44db-af7c-265377632bd0)
+
 This is a simple command-line To-Do List application written in Python. The app allows you to manage tasks, set due dates, track task completion, and even export/import tasks using a CSV file.
 
 ## Features
